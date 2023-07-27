@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 SCRIPTS_DIR="$(cd $(dirname "${BASH_SOURCE}") && pwd)"
-source ${SCRIPTS_DIR}/toolbox.sh
+source ${SCRIPTS_DIR}/scripts/toolbox.sh
 
 set -euo pipefail
 
