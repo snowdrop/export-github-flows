@@ -1,0 +1,84 @@
+name: Job exporting RUN sections of github jobs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  export-run-commands:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          #source ./scripts/toolbox.sh
+          #
+          #workflows_dir=".github/workflows"
+          #
+          #find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
+          #  filename=$(basename "$file")
+          #  note "Job file name: $workflows_dir/$filename"
+          #  ./scripts/export-run-job.sh $workflows_dir/$filename 2> errors.log
+          #done
+          #
+          ## Move the generated job files to the desired location within the repository
+          #mv job*.txt generated/
+          
+          #!/usr/bin/env bash
+          SCRIPTS_DIR="$(cd $(dirname "${BASH_SOURCE}") && pwd)"
+          source ${SCRIPTS_DIR}/toolbox.sh
+          
+          set -euo pipefail
+          
+          parse_yaml() {
+            local file="$1"
+            local yaml_content
+            yaml_content=$(cat "$file")
+          
+            local job_blocks
+            job_blocks=$(echo "$yaml_content" | grep -oP '(?<=jobs:)[\s\S]*?(?=steps:)')
+          
+            while IFS='' read -r job; do
+              local job_name
+              job_name=$(echo "$job" | grep -oP '(?<=name: ).*')
+              
+              local run_block
+              run_block=$(echo "$job" | grep -oP '(?<=run:)[\s\S]*?(?=script:)')
+              
+              local script_block
+              script_block=$(echo "$job" | grep -oP '(?<=script:)[\s\S]*?(?=-|[])')
+              
+              if [ -n "$run_block" ]; then
+                echo "$run_block" > "job${job_name}.txt"
+              elif [ -n "$script_block" ]; then
+                echo "$script_block" > "job${job_name}.txt"
+              else
+                echo "Error: Unable to find 'run:' or 'script:' block for job $job_name"
+                exit 1
+              fi
+            done <<< "$job_blocks"
+          }
+        
+          main() {
+            if [ $# -eq 0 ]; then
+              echo "Usage: $0 <github_workflow.yml>"
+              exit 1
+            fi
+          
+            local yaml_file="$1"
+            parse_yaml "$yaml_file"
+          }
+          
+          main "$@"
+
+      - name: Log errors
+        if: failure()
+        run: |
+          cat errors.log
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Generated new jobs files"
+          commit_user_name: "cmoulliard"
+          commit_user_email: "cmoulliard@redhat.com"
