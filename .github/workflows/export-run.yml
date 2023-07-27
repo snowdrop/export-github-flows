@@ -29,7 +29,8 @@ jobs:
           #mv job*.txt generated/
           
           #!/usr/bin/env bash
-          source ./scripts/toolbox.sh
+          #source ./scripts/toolbox.sh
+          set -x
           
           parse_yaml() {
             local file="$1"
