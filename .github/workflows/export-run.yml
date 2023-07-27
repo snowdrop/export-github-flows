@@ -16,10 +16,9 @@ jobs:
           workflows_dir=".github/workflows"
   
           find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
-            # Get the file name using the basename command
             filename=$(basename "$file")
-            note "Job file name: $filename"
-            ./scripts/export-run-job.sh $workflows_dir/$filename
+            note "Job file name: $workflows_dir/$filename"
+            bash ./scripts/export-run-job.sh $workflows_dir/$filename
           done
         
           # Move the generated job files to the desired location within the repository
