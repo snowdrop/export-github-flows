@@ -18,11 +18,16 @@ jobs:
           find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
             filename=$(basename "$file")
             note "Job file name: $workflows_dir/$filename"
-            bash ./scripts/export-run-job.sh $workflows_dir/$filename
+            ./scripts/export-run-job.sh $workflows_dir/$filename 2> errors.log
           done
         
           # Move the generated job files to the desired location within the repository
           mv job*.txt generated/
+
+      - name: Log errors
+        if: failure()
+        run: |
+          cat errors.log
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v4
