@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Enable debug output
+        run:
+          echo "ACTIONS_RUNNER_DEBUG: true" >> $GITHUB_ENV
+
       - run: |
           #source ./scripts/toolbox.sh
           #
