@@ -11,11 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Enable debug output
+      - name: Parsing job yaml files and export run commands
+        env:
+          echo "ACTIONS_RUNNER_DEBUG: true
         run: |
-          echo "ACTIONS_RUNNER_DEBUG: true" >> $GITHUB_ENV
-
-      - run: |
           #source ./scripts/toolbox.sh
           #
           #workflows_dir=".github/workflows"
