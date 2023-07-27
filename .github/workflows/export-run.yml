@@ -11,13 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
+          source ./scripts/toolbox.sh
+          
           workflows_dir=".github/workflows"
   
           find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
             # Get the file name using the basename command
             filename=$(basename "$file")
-            echo "Job file name: $filename"
-            ./scripts/export-run-job.sh $filename
+            note "Job file name: $filename"
+            ./scripts/export-run-job.sh $workflows_dir/$filename
           done
         
           # Move the generated job files to the desired location within the repository
