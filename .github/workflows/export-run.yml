@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - run: |
+          sudo snap install yq
+
       - name: Parsing job yaml files and export run commands
         env:
           echo "ACTIONS_RUNNER_DEBUG: true
@@ -30,10 +33,6 @@ jobs:
           
           #!/usr/bin/env bash
           #source ./scripts/toolbox.sh
-          
-          sudo snap install yq
-          
-          set -x
           
           parse_yaml() {
             yaml_file="$1"
