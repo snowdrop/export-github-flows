@@ -2,6 +2,8 @@
 SCRIPTS_DIR="$(cd $(dirname "${BASH_SOURCE}") && pwd)"
 source ${SCRIPTS_DIR}/toolbox.sh
 
+set -x
+
 parse_yaml() {
     local file="$1"
     local yaml_content
