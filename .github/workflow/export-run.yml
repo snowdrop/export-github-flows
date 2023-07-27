@@ -1,0 +1,35 @@
+name: Job exporting RUN sections of github jobs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  export-run-commands:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ 17 ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          workflows_dir=".github/workflow"
+  
+          find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
+            # Get the file name using the basename command
+            filename=$(basename "$file")
+            echo "Job file name: $filename"
+            ./scripts/export-run-job.sh $filename
+          done
+        
+          # Move the generated job files to the desired location within the repository
+          mv job*.txt generated/
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Generated new jobs files"
+          commit_user_name: "cmoulliard"
+          commit_user_email: "cmoulliard@redhat.com"
