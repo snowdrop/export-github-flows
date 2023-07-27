@@ -72,10 +72,10 @@ jobs:
           
           main "$@"
 
-      - name: Log errors
-        if: failure()
-        run: |
-          cat errors.log
+      #- name: Log errors
+      #  if: failure()
+      #  run: |
+      #    cat errors.log
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v4
