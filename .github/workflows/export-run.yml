@@ -36,32 +36,11 @@ jobs:
           set -x
           
           parse_yaml() {
-            local file="$1"
-            local yaml_content
-            yaml_content=$(cat "$file")
-          
-            local job_blocks
-            job_blocks=$(yq eval '.jobs | to_entries[] | .value' "$file")
-          
-            while IFS='' read -r job; do
-              local job_name
-              job_name=$(echo "$job" | yq eval '.name' -)
-              
-              local run_block
-              run_block=$(echo "$job" | yq eval '.run // empty' -)
-              
-              local script_block
-              script_block=$(echo "$job" | yq eval '.steps[] | .script // empty' -)          
-          
-              if [ -n "$run_block" ]; then
-                echo "$run_block" > "job${job_name}.txt"
-              elif [ -n "$script_block" ]; then
-                echo "$script_block" > "job${job_name}.txt"
-              else
-                echo "Error: Unable to find 'run:' or 'script:' block for job $job_name"
-                exit 1
-              fi
-            done <<< "$job_blocks"
+            yaml_file="$1"
+            
+            for job in $(yq eval -o=j $yaml_file | jq -cr '.jobs[]'); do
+              echo $job
+            done
           }
         
           main() {
@@ -69,9 +48,8 @@ jobs:
               echo "Usage: $0 <github_workflow.yml>"
               exit 1
             fi
-          
-            local yaml_file="$1"
-            parse_yaml "$yaml_file"
+        
+            parse_yaml "$1"
           }
           
           main ./.github/workflows/job-2.yml
