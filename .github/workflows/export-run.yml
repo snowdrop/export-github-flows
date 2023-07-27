@@ -30,6 +30,9 @@ jobs:
           
           #!/usr/bin/env bash
           #source ./scripts/toolbox.sh
+          
+          sudo snap install yq
+          
           set -x
           
           parse_yaml() {
@@ -38,18 +41,18 @@ jobs:
             yaml_content=$(cat "$file")
           
             local job_blocks
-            job_blocks=$(echo "$yaml_content" | grep -oP '(?<=jobs:)[\s\S]*?(?=steps:)')
+            job_blocks=$(yq eval '.jobs | to_entries[] | .value' "$file")
           
             while IFS='' read -r job; do
               local job_name
-              job_name=$(echo "$job" | grep -oP '(?<=name: ).*')
+              job_name=$(echo "$job" | yq eval '.name' -)
               
               local run_block
-              run_block=$(echo "$job" | grep -oP '(?<=run:)[\s\S]*?(?=script:)')
+              run_block=$(echo "$job" | yq eval '.run // empty' -)
               
               local script_block
-              script_block=$(echo "$job" | grep -oP '(?<=script:)[\s\S]*?(?=-|[])')
-              
+              script_block=$(echo "$job" | yq eval '.steps[] | .script // empty' -)          
+          
               if [ -n "$run_block" ]; then
                 echo "$run_block" > "job${job_name}.txt"
               elif [ -n "$script_block" ]; then
