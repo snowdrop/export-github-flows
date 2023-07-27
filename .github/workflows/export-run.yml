@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          workflows_dir=".github/workflow"
+          workflows_dir=".github/workflows"
   
           find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
             # Get the file name using the basename command
