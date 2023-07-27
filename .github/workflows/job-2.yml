@@ -1,0 +1,46 @@
+name: Temporary job to test all steps to install kind, vault & crossplane
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dummy ]
+
+jobs:
+  setup-primaza-k8s-platform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+          cache: 'maven'
+      - name: Setup Kubernetes using kind and deploy a local container registry
+        env:
+          REGISTRY_NAME: kind-registry
+          REGISTRY_PORT: 5000
+        run: |
+          curl -s -L "https://raw.githubusercontent.com/snowdrop/k8s-infra/main/kind/kind.sh" | bash -s install
+          
+          # Adding registry name to the /etc/hosts file
+          echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+
+          # Exporting the registry location for subsequent jobs
+          echo "KIND_REGISTRY=${REGISTRY_NAME}:${REGISTRY_PORT}" >> $GITHUB_ENV
+
+      - name: Build primaza, generate image, Helm chart and push image
+        env:
+          REGISTRY_GROUP: local
+        run: |
+          ./scripts/primaza.sh build
+
+      - name: Deploy primaza helm chart
+        env:
+          PRIMAZA_URL: primaza.127.0.0.1.nip.io
+        run: |
+          bash ./scripts/primaza.sh localdeploy
+          bash ./scripts/primaza.sh isAlive
+          
+          
+          

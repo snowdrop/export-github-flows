@@ -71,7 +71,7 @@ jobs:
             parse_yaml "$yaml_file"
           }
           
-          main ./.github/workflows/job-1.yml
+          main ./.github/workflows/job-2.yml
 
       #- name: Log errors
       #  if: failure()
