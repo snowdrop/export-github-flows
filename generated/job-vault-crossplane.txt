@@ -1,0 +1,145 @@
+################# ENV VARIABLES #################
+export PSEUDO_TTY=false
+export REGISTRY_NAME=kind-registry
+export REGISTRY_PORT=5000
+export REGISTRY_GROUP=local
+export PRIMAZA_GITHUB_REPO=${{ github.event.pull_request.head.repo.full_name }}
+export GITHUB_SHA_COMMIT=${{ github.sha }}
+export PRIMAZA_IMAGE_NAME=$KIND_REGISTRY/local/primaza-app
+export PRIMAZA_NAMESPACE=primaza
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export VAULT_URL=http://vault-internal.vault:8200
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export PRIMAZA_IMAGE_NAME=$KIND_REGISTRY/local/primaza-app
+export PRIMAZA_NAMESPACE=primaza
+export VAULT_URL=http://vault-internal.vault:8200
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export PRIMAZA_NAMESPACE=primaza
+export ATOMIC_FRUITS_NAMESPACE=app
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export PRIMAZA_NAMESPACE=primaza
+export PRIMAZA_URL=primaza.127.0.0.1.nip.io
+export ATOMIC_FRUITS_NAMESPACE=app
+export ATOMIC_FRUITS_NAMESPACE=app
+################# end env variable #################
+################# Job name: e2e-atomic-fruits-vault-crossplane #################
+# Step: Setup Kubernetes using kind and deploy a local container registry
+curl -s -L "https://raw.githubusercontent.com/snowdrop/k8s-infra/main/kind/kind.sh" | bash -s install
+
+# Adding registry name to the /etc/hosts file
+echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+
+# Exporting the registry location for subsequent jobs
+echo "KIND_REGISTRY=${REGISTRY_NAME}:${REGISTRY_PORT}" >> $GITHUB_ENV
+
+# Step: Build primaza, generate image, Helm chart and push image
+./scripts/primaza.sh build
+
+# Step: Deploy primaza helm chart
+./scripts/primaza.sh localdeploy
+./scripts/primaza.sh isAlive
+
+# Step: Load the data such as cluster, services, claim & credential
+./scripts/data/cluster.sh url=$PRIMAZA_URL kube_context=kind kind_url="https://kubernetes.default.svc" environment=dev ns_to_exclude="default,kube-system,ingress,pipelines-as-code,local-path-storage,crossplane-system,primaza,tekton-pipelines,tekton-pipelines-resolvers,vault"
+
+# Register this service as installable to let crossplane to install it
+./scripts/data/services.sh url=$PRIMAZA_URL service_name=postgresql version=14.5 installable=on type=postgresql endpoint=tcp:5432 helm_repo="https://charts.bitnami.com/bitnami&helmChart=postgresql&helmChartVersion=11.9.13"
+./scripts/data/services.sh url=$PRIMAZA_URL service_name=mysql version=8.0 type=mysql endpoint=tcp:3306
+./scripts/data/services.sh url=$PRIMAZA_URL service_name=activemq-artemis version=2.26 type=activemq endpoint=tcp:8161
+./scripts/data/services.sh url=$PRIMAZA_URL service_name=mariadb version=10.9 type=mariadb endpoint=tcp:3306
+
+./scripts/data/credentials.sh url=$PRIMAZA_URL credential_name=fruits_database-vault-creds service_name=postgresql vault_kv=primaza/fruits
+
+./scripts/data/claims.sh url=$PRIMAZA_URL claim_name=fruits-claim description=postgresql-fruits-db requested_service=postgresql-14.5
+
+# Step: Installing Vault
+./scripts/vault.sh
+
+# Step: Installing Crossplane
+./scripts/crossplane.sh
+
+# Step: Installing Postgresql DB and Atomic fruits
+# Install the atomic fruits helm chart from Halkyion repo
+./scripts/atomic-fruits.sh deploy
+
+# Step: Creating the Primaza fruits Vault KV key
+source ./scripts/common.sh
+
+# Login as user bob and password sinclair
+./scripts/vault.sh loginAsUser bob sinclair
+
+# Register the primaza KV entries
+note "vault kv put -mount=secret primaza/fruits username=healthy password=healthy database=fruits_database"
+./scripts/vault.sh vaultExec "vault kv put -mount=secret primaza/fruits username=healthy password=healthy database=fruits_database"
+
+# Step: Wait until atomic-fruits is registered in Primaza
+source ./scripts/common.sh
+max_retries=5
+retry_delay=5
+retry_attempt=1
+
+function discover_atomic_fruits() {
+  APPLICATION=$(curl -H 'Accept: application/json' -s "$PRIMAZA_URL/applications/name/atomic-fruits")
+  if [[ $(echo "$APPLICATION" | jq -r '.name') == "atomic-fruits" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+while [ $retry_attempt -le $max_retries ]; do
+  note "Attempt $retry_attempt of $max_retries"
+  if discover_atomic_fruits; then
+    note "Primaza discovered the atomic-fruits application: $APPLICATION."
+    exit 0
+  else
+    warn "Primaza didn't yet discovered the atomic-fruits application: $APPLICATION."
+    sleep $retry_delay
+  fi
+done
+
+# Step: Bind application
+./scripts/primaza.sh bindApplication atomic-fruits fruits-claim
+
+# Step: atomic-fruits should now be up and running
+source ./scripts/common.sh
+
+# When the condition met and that the atomic fruits deployment is available, 
+# that means that the application is now bound with the service, 
+# so we're good !
+kubectl wait --timeout=300s --for=condition=available deployment atomic-fruits -n $ATOMIC_FRUITS_NAMESPACE
+
+CLAIM_STATUS=$(curl -s http://$PRIMAZA_URL/claims/name/fruits-claim | jq -r .status)
+if [[ "$CLAIM_STATUS" == "bound" ]]; then
+  exit 0
+else
+  error "Status of the claim: fruits-claim is: $CLAIM_STATUS" 
+  exit 1
+fi
+
+# Step: (Only if it failed) Log Primaza traces at failures
+./scripts/primaza.sh log
+
+# Step: (Only if it failed) Log Atomic Fruits traces at failures
+source ./scripts/common.sh
+
+log BLUE "List of the pods deployed on the cluster"
+kubectl get pods -A
+
+log BLUE "Description of the atomic-fruits deployment resource"
+kubectl get deployment atomic-fruits -o yaml -n $ATOMIC_FRUITS_NAMESPACE
+
+log BLUE "Logs of the atomic-fruits deployment resource"
+kubectl logs deploy/atomic-fruits --all-containers=true -n $ATOMIC_FRUITS_NAMESPACE
+
+POD_NAME=$(kubectl get pod -l app.kubernetes.io/name=atomic-fruits -n $ATOMIC_FRUITS_NAMESPACE -o name)
+log BLUE "Information of the Atomic-fruits pod"
+kubectl describe $POD_NAME -n $ATOMIC_FRUITS_NAMESPACE
+
+log BLUE "Logs of atomic-fruits running pod"
+kubectl logs $POD_NAME -n $ATOMIC_FRUITS_NAMESPACE
+
+log BLUE "Logs of atomic-fruits terminated pod"
+kubectl logs -p $POD_NAME -n $ATOMIC_FRUITS_NAMESPACE
+################# end job #################
