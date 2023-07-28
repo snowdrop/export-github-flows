@@ -3,9 +3,9 @@ name: Temporary job to test all steps to install kind, vault & crossplane
 on:
   workflow_dispatch:
   push:
-    branches: [ dummy ]
+    branches: [ test_flow ]
     paths-ignore:
-      - 'scripts/**'    # Ignores bash scripts
+      #- 'scripts/**' # Ignores  scripts
       - '*.md'          # Ignores .md files at the root of the repository
       - '**/*.md'       # Ignores .md files within subdirectories
 
@@ -14,7 +14,7 @@ env:
   PSEUDO_TTY: "false"
 
 jobs:
-  setup-primaza-k8s-platform:
+  e2e-atomic-fruits-vault:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -64,39 +64,46 @@ jobs:
           # Variable needed by the helm chart to configure primaza vault client
           VAULT_URL: http://vault-internal.vault:8200
         run: |
-          bash ./scripts/primaza.sh localdeploy
-          bash ./scripts/primaza.sh isAlive
+          ./scripts/primaza.sh localdeploy
+          ./scripts/primaza.sh isAlive
 
-      - name: Load the data such as cluster, services & credentials
+      - name: Load the data such as cluster, services, claim & credential
         env:
           PRIMAZA_URL: primaza.127.0.0.1.nip.io
           PRIMAZA_NAMESPACE: primaza
         run: |
-          bash ./scripts/primaza.sh loaddata
+          ./scripts/data/cluster.sh url=$PRIMAZA_URL kube_context=kind kind_url="https://kubernetes.default.svc" environment=dev ns_to_exclude="default,kube-system,ingress,pipelines-as-code,local-path-storage,crossplane-system,primaza,tekton-pipelines,tekton-pipelines-resolvers,vault"
 
+          ./scripts/data/services.sh url=$PRIMAZA_URL service_name=postgresql version=14.5 type=postgresql endpoint=tcp:5432 helm_repo="https://charts.bitnami.com/bitnami&helmChart=postgresql&helmChartVersion=11.9.13"
+          ./scripts/data/services.sh url=$PRIMAZA_URL service_name=mysql version=8.0 type=mysql endpoint=tcp:3306
+          ./scripts/data/services.sh url=$PRIMAZA_URL service_name=activemq-artemis version=2.26 type=activemq endpoint=tcp:8161
+          ./scripts/data/services.sh url=$PRIMAZA_URL service_name=mariadb version=10.9 type=mariadb endpoint=tcp:3306
+          
+          ./scripts/data/credentials.sh url=$PRIMAZA_URL credential_name=fruits_database-vault-creds service_name=postgresql vault_kv=primaza/fruits
+          
+          ./scripts/data/claims.sh url=$PRIMAZA_URL claim_name=fruits-claim description=postgresql-fruits-db requested_service=postgresql-14.5
       - name: Installing Vault
         run: |
-          bash ./scripts/vault.sh
-
-      - name: Installing Crossplane
-        run: |
-          bash ./scripts/crossplane.sh
+          ./scripts/vault.sh
 
       - name: Installing Postgresql DB and Atomic fruits
         env:
           ATOMIC_FRUITS_NAMESPACE: app
         run: |
-          bash ./scripts/atomic-fruits.sh
+          ./scripts/atomic-fruits.sh installdb
           
           # Wait till postgresql pod is ready
           kubectl wait -n $ATOMIC_FRUITS_NAMESPACE pod/postgresql-0 --for=condition=ready --timeout=300s
+          
+          # Install the atomic fruits helm chart from Halkyion repo
+          ./scripts/atomic-fruits.sh deploy
 
       - name: Creating the Primaza fruits Vault KV key
         run: |
-          source ./scripts/toolbox.sh
+          source ./scripts/common.sh
           
           # Login as user bob and password sinclair
-          bash ./scripts/vault.sh loginAsUser bob sinclair
+          ./scripts/vault.sh loginAsUser bob sinclair
           
           # Register the primaza KV entries
           note "vault kv put -mount=secret primaza/fruits username=healthy password=healthy database=fruits_database"
@@ -106,7 +113,7 @@ jobs:
         env:
           PRIMAZA_URL: primaza.127.0.0.1.nip.io
         run: |
-          source ./scripts/toolbox.sh
+          source ./scripts/common.sh
           max_retries=5
           retry_delay=5
           retry_attempt=1
@@ -136,7 +143,7 @@ jobs:
           PRIMAZA_URL: primaza.127.0.0.1.nip.io
           PRIMAZA_NAMESPACE: primaza
         run: |
-          bash ./scripts/primaza.sh bindApplication atomic-fruits fruits-claim
+          ./scripts/primaza.sh bindApplication atomic-fruits fruits-claim
 
       - id: wait-for-atomic-fruits
         name: atomic-fruits should now be up and running
@@ -144,7 +151,7 @@ jobs:
           PRIMAZA_URL: primaza.127.0.0.1.nip.io
           ATOMIC_FRUITS_NAMESPACE: app
         run: |
-          source ./scripts/toolbox.sh
+          source ./scripts/common.sh
           
           # When the condition met and that the atomic fruits deployment is available, 
           # that means that the application is now bound with the service, 
@@ -162,14 +169,14 @@ jobs:
       - name: (Only if it failed) Log Primaza traces at failures
         if: failure()
         run: |
-          bash ./scripts/primaza.sh log
+          ./scripts/primaza.sh log
 
       - name: (Only if it failed) Log Atomic Fruits traces at failures
         if: failure()
         env:
           ATOMIC_FRUITS_NAMESPACE: app
         run: |
-          source ./scripts/toolbox.sh
+          source ./scripts/common.sh
           
           log BLUE "List of the pods deployed on the cluster"
           kubectl get pods -A
@@ -189,6 +196,3 @@ jobs:
           
           log BLUE "Logs of atomic-fruits terminated pod"
           kubectl logs -p $POD_NAME -n $ATOMIC_FRUITS_NAMESPACE
-          
-          
-          

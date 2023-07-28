@@ -1,46 +1,47 @@
 #!/usr/bin/env bash
 SCRIPTS_DIR="$(cd $(dirname "${BASH_SOURCE}") && pwd)"
-source ${SCRIPTS_DIR}/scripts/toolbox.sh
-
-set -euo pipefail
+source ${SCRIPTS_DIR}/toolbox.sh
 
 parse_yaml() {
-    local file="$1"
-    local yaml_content
-    yaml_content=$(cat "$file")
+  yaml_file="$1"
+  yq -o json $yaml_file | jq -r 'walk(if type == "null" then "" else . end)' > ./scripts/job.json
+  local json_content=$(cat ./scripts/job.json)
 
-    local job_blocks
-    job_blocks=$(echo "$yaml_content" | grep -oP '(?<=jobs:)[\s\S]*?(?=steps:)')
+  env_pairs=$(echo "$json_content" | jq -r '.. | .env? | select(.) | to_entries[] | "\(.key)=\(.value)"')
+  # echo $env_pairs
+  # Export each key-value pair as environment variables
+  echo "################# ENV VARIABLES #################"
+  while IFS='=' read -r key value; do
+    echo "export $key"="$value"
+  done <<< "$env_pairs"
+  echo "################# end env variable #################"
 
-    while IFS='' read -r job; do
-        local job_name
-        job_name=$(echo "$job" | grep -oP '(?<=name: ).*')
+  # Iterate through each job key
+  echo "$json_content" | jq -r '.jobs | keys[]' | while read -r job; do
+    echo "################# Job name: $job #################"
 
-        local run_block
-        run_block=$(echo "$job" | grep -oP '(?<=run:)[\s\S]*?(?=script:)')
+    # Get the steps array for the current job
+    steps=$(echo "$json_content" | jq -r ".jobs[\"$job\"].steps")
 
-        local script_block
-        script_block=$(echo "$job" | grep -oP '(?<=script:)[\s\S]*?(?=-|[])')
+    # Check if steps array is not null
+    if [ "$steps" != "null" ]; then
+      # Iterate through the steps and echo their names and run content
+      echo "$steps" | jq -r 'map(select(has("run"))) | .[] | "# Step: \(.name)\n\(.run)"'
+    else
+      echo "No steps found for this job."
+    fi
 
-        if [ -n "$run_block" ]; then
-            echo "$run_block" > "job${job_name}.txt"
-        elif [ -n "$script_block" ]; then
-            echo "$script_block" > "job${job_name}.txt"
-        else
-            echo "Error: Unable to find 'run:' or 'script:' block for job $job_name"
-            exit 1
-        fi
-    done <<< "$job_blocks"
+    echo "################# end job #################"
+  done
 }
 
 main() {
-    if [ $# -eq 0 ]; then
-        echo "Usage: $0 <github_workflow.yml>"
-        exit 1
-    fi
+  if [ $# -eq 0 ]; then
+    echo "Usage: $0 <github_workflow.yml>"
+    exit 1
+  fi
 
-    local yaml_file="$1"
-    parse_yaml "$yaml_file"
+  parse_yaml "$1"
 }
 
 main "$@"
