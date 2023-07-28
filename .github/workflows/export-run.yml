@@ -24,7 +24,7 @@ jobs:
           
           find "$workflows_dir" -type f -print0 | while IFS= read -r -d '' file; do
             f=$(basename "$file")
-            f_without_extension="${file_name%.*}"
+            f_without_extension="${f%.*}"
             note "Job file processed: $workflows_dir/$f"
             ./scripts/export-run-job.sh $workflows_dir/$f > job-$f_without_extension.txt
             
