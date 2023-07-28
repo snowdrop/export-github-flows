@@ -4,11 +4,10 @@ source ${SCRIPTS_DIR}/toolbox.sh
 
 parse_yaml() {
   yaml_file="$1"
-  yq -o json $yaml_file | jq -r 'walk(if type == "null" then "" else . end)' > ./scripts/job.json
-  local json_content=$(cat ./scripts/job.json)
+  local json_content=$(yq -o json $yaml_file | jq -r 'walk(if type == "null" then "" else . end)')
 
   env_pairs=$(echo "$json_content" | jq -r '.. | .env? | select(.) | to_entries[] | "\(.key)=\(.value)"')
-  # echo $env_pairs
+
   # Export each key-value pair as environment variables
   echo "################# ENV VARIABLES #################"
   while IFS='=' read -r key value; do
