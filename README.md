@@ -1,6 +1,6 @@
 # Export github workflows
 
-This project aims to read github workflows and to export in a txt file the `env` and `run` sections.
+This project aims to read [github workflows](https://docs.github.com/en/actions/quickstart) and to export in a txt file the `env` and `run` sections.
 
 Why ? As the goal of a 2e2 test, played by a GitHub workflow, is to verify if the scenario which requires to potentially install many
 components on the platform (kubernetes cluster, certificate manager, tekton pipeline, service binding, vault, crossplane etc) 
