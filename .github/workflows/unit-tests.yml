@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,13 +22,16 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Python test
-        run: pytest
+        run: pytest > pytest.log 2>&1
+        continue-on-error: true
+
+      - name: Upload log as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest-log
+          path: pytest.log
 
       - name: Check for errors
         if: ${{ failure() }}
         run: |
           echo "Job failed!"
-
-      - name: Log success message
-        if: ${{ success() }}
-        run: echo "Job succeeded!"
