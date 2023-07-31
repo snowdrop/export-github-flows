@@ -56,7 +56,7 @@ jobs:
 
 And what we got:
 
-![sample-flow.png](images%2Fsample-flow.png)
+<img src="https://github.com/ch007m/export-github-flows/blob/main/images/sample-flow.png" width="500"/>
 
 
 **Important**: Some hacking will be needed as the script cannot figure out what the [GitHub default variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) are 
@@ -68,4 +68,4 @@ GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 Generated into:
 
-<img src="https://github.com/ch007m/export-github-flows/blob/7a474858534ccec539e39760be8c59cf755b3606/images/sample-git-env.png" width="500"/>
+<img src="https://github.com/ch007m/export-github-flows/blob/main/images/sample-git-env.png" width="500"/>
