@@ -12,7 +12,7 @@ This project aims to read [github workflows](https://docs.github.com/en/actions/
 Why ? As the goal of a 2e2 test, played by a GitHub workflow, is to verify if the scenario which requires to potentially install many
 components on the platform (kubernetes cluster, certificate manager, tekton pipeline, service binding, vault, crossplane etc) 
 works, the information such as `run:` or `run: |`  or environment variables set `env:` could be more than valuable
-for local debugging, fine-tuning, etc purposes.
+for local debugging, fine-tuning, demo purposes.
 
 To play with it and export the information in a file, you can then use the following bash script and pass as parameter the file to be processed:
 ```bash
