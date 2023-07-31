@@ -12,6 +12,7 @@ env:
 
 jobs:
   job1:
+    runs-on: ubuntu-latest
     env:
       FIRST_NAME: Mona
       LAST_NAME: Lisa
