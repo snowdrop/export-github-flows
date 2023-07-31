@@ -56,7 +56,7 @@ jobs:
 
 And what we got:
 
-![sample-generated.png](images%2Fsample-generated.png)
+![sample-flow.png](images%2Fsample-flow.png)
 
 
 **Important**: Some hacking will be needed as the script cannot figure out what the [GitHub default variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) are 
