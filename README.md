@@ -1,3 +1,12 @@
+<p align="center">
+    <a href="https://github.com/ch007m/export-github-flows/graphs/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/ch007m/export-github-flows"/></a>
+    <a href="https://github.com/ch007m/export-github-flows/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/ch007m/export-github-flows"/></a>
+    <a href="https://github.com/ch007m/export-github-flows/actions/workflows/push.yml" alt="Build Status">
+        <img src="https://github.com/ch007m/export-github-flows/actions/workflows/push.yml/badge.svg"></a>
+</p>
+
 # Export github workflows
 
 This project aims to read [github workflows](https://docs.github.com/en/actions/quickstart) and to export in a txt file the `env` and `run` sections.
