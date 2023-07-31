@@ -69,3 +69,5 @@ GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 Generated into:
 
 <img src="https://github.com/ch007m/export-github-flows/blob/main/images/sample-git-env.png" width="500"/>
+
+Enjoy to play with this project and improve it ;-)
