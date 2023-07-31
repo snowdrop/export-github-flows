@@ -56,7 +56,7 @@ jobs:
 
 And what we got:
 
-<img src="https://github.com/ch007m/export-github-flows/blob/main/images/sample-flow.png" width="500"/>
+<img src="https://github.com/ch007m/export-github-flows/blob/main/images/sample-flow.png" width="700"/>
 
 
 **Important**: Some hacking will be needed as the script cannot figure out what the [GitHub default variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) are 
