@@ -3,3 +3,6 @@
 
 # Scripts to ignore
 /scripts/test.sh
+/.pytest_cache/
+test/.pytest_cache/
+
