@@ -15,6 +15,11 @@ env:
 
 jobs:
   e2e-atomic-fruits-vault:
+    #
+    # This job is responsible to setup the proper kubernetes environment:
+    # Install kind + container registry + ingress
+    # Deploy primaza & vault helm charts
+    #
     runs-on: ubuntu-latest
     strategy:
       matrix:

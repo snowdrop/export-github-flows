@@ -1,2 +1,5 @@
 # Intellij
 .idea/
+
+# Scripts to ignore
+/scripts/test.sh
