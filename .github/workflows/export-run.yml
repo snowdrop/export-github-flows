@@ -26,7 +26,7 @@ jobs:
             f=$(basename "$file")
             f_without_extension="${f%.*}"
             note "Job file processed: $workflows_dir/$f"
-            ./scripts/export-run-job.sh $workflows_dir/$f > job-$f_without_extension.txt
+            ./scripts/export-jobs.sh $workflows_dir/$f > job-$f_without_extension.txt
             
             # Move the generated job files to the desired location within the repository
             mv job-$f_without_extension.txt generated/
