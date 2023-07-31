@@ -52,5 +52,13 @@ And what we got:
 ![sample-generated.png](images%2Fsample-generated.png)
 
 
-**Important**: Some hacking will be needed to re-use the commands locally as the script cannot figure out what the [GitHub default variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) are 
-and cannot perform substitution too !
+**Important**: Some hacking will be needed as the script cannot figure out what the [GitHub default variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) are 
+and cannot perform substitution too. 
+
+Example:
+```yaml
+GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+Generated into:
+
+![sample-git-env.png](images%2Fsample-git-env.png)

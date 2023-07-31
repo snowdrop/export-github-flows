@@ -81,11 +81,11 @@ warn() {
   # Use command substitution to check if the string contains a newline
   if [ -z "$(echo "$MSG" | grep $'\n')" ]; then
     # Single-line string, directly echo it
-    echo -e "${YELLOW}WARN:${NC} $MSG"
+    echo -e "${YELLOW}$MSG${NC}"
   else
     # Multiline string, iterate over each line using a while loop and read
     while IFS= read -r line; do
-      echo -e "${YELLOW}WARN:${NC} $line"
+      echo -e "${YELLOW}$line${NC}"
     done <<< "$MSG"
   fi
 }

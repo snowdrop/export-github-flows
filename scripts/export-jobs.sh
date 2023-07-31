@@ -11,7 +11,17 @@ parse_yaml() {
   # Export each key-value pair as environment variables
   log BLUE "Begin ENVIRONMENT VARIABLES section"
   while IFS='=' read -r key value; do
-    echo "export $key"="$value"
+    # Check if the variable starts with '${{' and ends with '}}'
+    if [[ $value == \$\{\{*}} ]]; then
+      # Extract the content between '${{' and '}}'
+      content="${value#*\$\{\{}"
+      content="${content%%\}\}}"
+
+      # Print the formatted message
+      echo "export $key="$(warn "<CHANGE_ME:$content>")
+    else
+      echo "export $key=$value"
+    fi
   done <<< "$env_pairs"
   log BLUE "End ENVIRONMENT VARIABLES section"
 
