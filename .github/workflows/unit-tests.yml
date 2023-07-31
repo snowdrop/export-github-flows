@@ -1,0 +1,31 @@
+name: Python Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up run environment
+        uses: actions/checkout@v2
+
+      - name: Install Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Run Python test
+        run: pytest
+
+      - name: Check for errors
+        if: ${{ failure() }}
+        run: |
+          echo "Job failed!"
+
+      - name: Log success message
+        if: ${{ success() }}
+        run: echo "Job succeeded!"
