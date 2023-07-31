@@ -70,4 +70,4 @@ GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 Generated into:
 
-![sample-git-env.png](images%2Fsample-git-env.png)
+![<img src="sample-git-env.png> width="200"/>](images%2Fsample-git-env.png)
