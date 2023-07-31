@@ -5,7 +5,7 @@
         <img src="https://img.shields.io/github/commit-activity/m/ch007m/export-github-flows"/></a>
 </p>
 
-# Export github workflows
+# Export "e2e" github workflows
 
 This project aims to read [github workflows](https://docs.github.com/en/actions/quickstart) and to export in a txt file the `env` and `run` sections.
 
