@@ -2,7 +2,7 @@ name: gitHub Workflow sample
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dummy ]
     paths-ignore:
       - '*.md'          # Ignores .md files at the root of the repository
       - '**/*.md'       # Ignores .md files within subdirectories
