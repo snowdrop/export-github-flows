@@ -3,6 +3,8 @@
         <img src="https://img.shields.io/github/contributors/ch007m/export-github-flows"/></a>
     <a href="https://github.com/ch007m/export-github-flows/pulse" alt="Activity">
         <img src="https://img.shields.io/github/commit-activity/m/ch007m/export-github-flows"/></a>
+    <a href="https://github.com/ch007m/export-github-flows/actions/workflows/unit-tests.yml" alt="Build Status">
+        <img src="https://github.com/ch007m/export-github-flows/actions/workflows/unit-tests.yml/badge.svg"></a>
 </p>
 
 # Export "e2e" github workflows
