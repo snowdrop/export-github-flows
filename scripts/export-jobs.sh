@@ -9,15 +9,16 @@ parse_yaml() {
   env_pairs=$(echo "$json_content" | jq -r '.. | .env? | select(.) | to_entries[] | "\(.key)=\(.value)"')
 
   # Export each key-value pair as environment variables
-  echo "################# ENV VARIABLES #################"
+  log BLUE "Begin ENVIRONMENT VARIABLES section"
   while IFS='=' read -r key value; do
     echo "export $key"="$value"
   done <<< "$env_pairs"
-  echo "################# end env variable #################"
+  log BLUE "End ENVIRONMENT VARIABLES section"
 
+  log GREEN "Begin JOBS section"
   # Iterate through each job key
   echo "$json_content" | jq -r '.jobs | keys[]' | while read -r job; do
-    echo "################# Job name: $job #################"
+    log "GREEN" $job
 
     # Get the steps array for the current job
     steps=$(echo "$json_content" | jq -r ".jobs[\"$job\"].steps")
@@ -32,6 +33,7 @@ parse_yaml() {
 
     echo "################# end job #################"
   done
+  log GREEN "End JOBS section"
 }
 
 main() {

@@ -1,0 +1,30 @@
+name: gitHub Workflow sample
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'          # Ignores .md files at the root of the repository
+      - '**/*.md'       # Ignores .md files within subdirectories
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  job1:
+    env:
+      FIRST_NAME: Mona
+      LAST_NAME: Lisa
+
+    steps:
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Clean install dependencies and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Clean temp directory
+        run: rm -rf *
+        working-directory: ./temp
