@@ -14,7 +14,7 @@ components on the platform (kubernetes cluster, certificate manager, tekton pipe
 works, the information such as `run:` or `run: |`  or environment variables set `env:` could be more than valuable
 for local debugging, fine-tuning, etc purposes.
 
-So, to export the information in a file, you can then use the following bash script and pass as parameter the file to be processed:
+To play with it and export the information in a file, you can then use the following bash script and pass as parameter the file to be processed:
 ```bash
 ./scripts/export-jobs.sh </path/workflow-file.yml>
 ```
